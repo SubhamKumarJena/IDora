@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎓 IDora – Smart Campus ID Portal
 
 > **A Comprehensive, Production-Ready Academic Web Application for University Identity Lifecycle Management.**  
@@ -367,3 +368,7 @@ Developed as a standard BTech Computer Science & Engineering Academic Project.
 Engineered with modular, educational, clean-code standards and complete documentation.
 
 *Licensed under the MIT License.*
+=======
+# IDora
+College group project for an online Student ID Card Management System.
+>>>>>>> 5828161597b99c7f2865840dee455693288cf3e4
