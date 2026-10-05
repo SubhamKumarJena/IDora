@@ -1,0 +1,55 @@
+<!doctype html>
+<!--
+  FILE: index.html
+  PURPOSE: This is the single HTML file that serves as the entry point
+  for our entire React application. React will inject all its content
+  into the <div id="root"> element below. This is called a
+  "Single Page Application" (SPA) pattern.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Viewport tag makes the page responsive on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicon: The small icon shown in browser tab -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- SEO Meta Tags: Helps search engines understand our page -->
+    <meta
+      name="description"
+      content="IDora – Smart Campus ID Portal. Submit and track your student ID card requests online."
+    />
+    <meta name="keywords" content="student ID card, campus portal, ID request, college ID" />
+
+    <!-- Open Graph tags for social media sharing previews -->
+    <meta property="og:title" content="IDora – Smart Campus ID Portal" />
+    <meta property="og:description" content="Your Identity. Simplified." />
+
+    <!-- Google Fonts: Import the Inter font family for clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>IDora – Smart Campus ID Portal</title>
+  </head>
+  <body>
+    <!--
+      This <div> is the "root" element where React will render our
+      entire application. React finds this element and injects all
+      our components inside it.
+    -->
+    <div id="root"></div>
+
+    <!--
+      This script tag loads our main React application.
+      Vite processes main.jsx and bundles all our JavaScript code.
+      The "type=module" attribute tells the browser this is a modern
+      JavaScript module (allows import/export syntax).
+    -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

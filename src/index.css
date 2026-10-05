@@ -1,0 +1,443 @@
+/* ============================================================
+   FILE: src/index.css
+   PURPOSE: Global CSS styles for the IDora application.
+   This file sets up base styles, CSS custom properties (variables)
+   for our color palette and theme, and imports Tailwind CSS.
+   
+   WHAT IS TAILWIND CSS?
+   Tailwind is a "utility-first" CSS framework. Instead of writing
+   custom CSS classes, we apply pre-built utility classes directly
+   in our HTML/JSX. For example: "text-blue-500" makes text blue,
+   "p-4" adds padding, "flex" makes an element a flexbox container.
+   ============================================================ */
+
+/* Import Tailwind CSS - this single line brings in all Tailwind utility classes */
+@import "tailwindcss";
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES (CSS Variables)
+   These are like "variables" in CSS. We define colors and other
+   values here so we can reuse them throughout the application.
+   The :root selector means these apply to the entire document.
+   ============================================================ */
+:root {
+  /* Primary brand colors - Deep navy and royal blue palette */
+  --color-primary-900: #0a1628;
+  --color-primary-800: #0d1f3c;
+  --color-primary-700: #1a3360;
+  --color-primary-600: #1e4080;
+  --color-primary-500: #1d4ed8;
+  --color-primary-400: #3b82f6;
+  --color-primary-300: #60a5fa;
+  --color-primary-200: #93c5fd;
+  --color-primary-100: #dbeafe;
+  --color-primary-50:  #eff6ff;
+
+  /* Accent color - Cyan for highlights and CTAs */
+  --color-accent-500: #06b6d4;
+  --color-accent-400: #22d3ee;
+  --color-accent-300: #67e8f9;
+
+  /* Status colors for request states */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger:  #ef4444;
+  --color-info:    #3b82f6;
+
+  /* Font family - Inter is a clean, modern font good for UIs */
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Border radius for consistent rounded corners */
+  --radius-sm:  0.375rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.75rem;
+  --radius-xl:  1rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* ============================================================
+   GLOBAL BASE STYLES
+   These styles apply to the entire document.
+   ============================================================ */
+
+/* Apply box-sizing: border-box to ALL elements.
+   This means padding and border are included in an element's total
+   width/height, which makes layout calculations much easier. */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin from the body and set font */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  /* antialiased makes fonts look smoother on screens */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Smooth color transitions for dark/light mode toggle */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Make the root div fill the entire viewport height */
+#root {
+  min-height: 100vh;
+}
+
+/* ============================================================
+   LIGHT MODE (DEFAULT) THEME
+   Colors used when the user has light mode enabled.
+   ============================================================ */
+:root {
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f8fafc;
+  --bg-card:       #ffffff;
+  --text-primary:  #0f172a;
+  --text-secondary:#475569;
+  --text-muted:    #94a3b8;
+  --border-color:  #e2e8f0;
+  --shadow-color:  rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================
+   DARK MODE THEME
+   When the user enables dark mode, the <html> element gets
+   the "dark" class, and these styles override the light mode ones.
+   ============================================================ */
+.dark {
+  --bg-primary:    #0a1628;
+  --bg-secondary:  #0d1f3c;
+  --bg-card:       #112240;
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:    #64748b;
+  --border-color:  #1e3a5f;
+  --shadow-color:  rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================
+   CUSTOM UTILITY CLASSES
+   Classes that extend Tailwind with our specific design system.
+   ============================================================ */
+
+/* Card style: Rounded corners, shadow, themed background */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 3px var(--shadow-color), 0 1px 2px var(--shadow-color);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Card hover effect: Lift the card slightly on hover */
+.card:hover {
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transform: translateY(-1px);
+}
+
+/* Gradient background for hero sections and headers */
+.gradient-primary {
+  background: linear-gradient(135deg, #0a1628 0%, #1a3360 50%, #1d4ed8 100%);
+}
+
+/* Glowing button style for primary actions */
+.btn-primary {
+  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
+}
+
+/* Hover effect: Button glows more intensely */
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(29, 78, 216, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary button style: Outlined appearance */
+.btn-secondary {
+  background: transparent;
+  color: #1d4ed8;
+  border: 2px solid #1d4ed8;
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #1d4ed8;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   STATUS BADGE STYLES
+   Visual indicators for request status (Submitted, Approved, etc.)
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px; /* Fully rounded (pill shape) */
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Each status has its own color combination */
+.badge-submitted     { background: #dbeafe; color: #1e40af; }
+.badge-under-review  { background: #fef3c7; color: #92400e; }
+.badge-approved      { background: #d1fae5; color: #065f46; }
+.badge-rejected      { background: #fee2e2; color: #991b1b; }
+.badge-ready         { background: #ede9fe; color: #5b21b6; }
+.badge-completed     { background: #d1fae5; color: #065f46; }
+
+/* Dark mode adjustments for badges */
+.dark .badge-submitted     { background: #1e3a8a; color: #93c5fd; }
+.dark .badge-under-review  { background: #78350f; color: #fcd34d; }
+.dark .badge-approved      { background: #064e3b; color: #6ee7b7; }
+.dark .badge-rejected      { background: #7f1d1d; color: #fca5a5; }
+.dark .badge-ready         { background: #4c1d95; color: #c4b5fd; }
+.dark .badge-completed     { background: #064e3b; color: #6ee7b7; }
+
+/* ============================================================
+   SCROLLBAR STYLING
+   Custom scrollbar that matches our design theme.
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1d4ed8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1e40af;
+}
+
+/* ============================================================
+   SMOOTH SCROLLING
+   Makes the page scroll smoothly instead of jumping.
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================
+   FOCUS STYLES FOR ACCESSIBILITY
+   When users navigate with keyboard (Tab key), focused elements
+   should be clearly visible. This is important for accessibility.
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   ANIMATION KEYFRAMES
+   Custom animations used throughout the application.
+   ============================================================ */
+
+/* Fade in animation: Element gradually becomes visible */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulse glow animation: For hero decorative elements */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(29, 78, 216, 0.3); }
+  50%       { box-shadow: 0 0 40px rgba(29, 78, 216, 0.6); }
+}
+
+/* Float animation: Gentle up-and-down floating effect */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Apply animations via utility classes */
+.animate-fadeIn   { animation: fadeIn 0.5s ease forwards; }
+.animate-float    { animation: float 3s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+.animate-slideInLeft { animation: slideInLeft 0.4s ease forwards; }
+
+/* ============================================================
+   FORM STYLES
+   Consistent styling for input fields across the application.
+   ============================================================ */
+.form-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+
+/* Highlight the input field when the user clicks on it (focus state) */
+.form-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Style for invalid/error state */
+.form-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* ============================================================
+   SIDEBAR STYLES
+   The side navigation panel in dashboards.
+   ============================================================ */
+.sidebar {
+  background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 100%);
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+/* Active navigation item in sidebar */
+.sidebar-item-active {
+  background: rgba(29, 78, 216, 0.3);
+  border-left: 3px solid #3b82f6;
+  color: #93c5fd;
+}
+
+/* ============================================================
+   TABLE STYLES
+   Consistent table appearance throughout the app.
+   ============================================================ */
+.table-container {
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Zebra striping: Alternate row colors for readability */
+.data-table tbody tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(29, 78, 216, 0.05);
+}
+
+/* ============================================================
+   TIMELINE STYLES
+   For the request status progress tracker.
+   ============================================================ */
+.timeline-connector {
+  width: 2px;
+  background: var(--border-color);
+  flex-grow: 1;
+  margin: 0 auto;
+}
+
+.timeline-connector.active {
+  background: linear-gradient(180deg, #1d4ed8, #06b6d4);
+}
+
+/* ============================================================
+   LOADING SPINNER
+   Shown while data is being fetched from the database.
+   ============================================================ */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--border-color);
+  border-top-color: #1d4ed8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ============================================================
+   GLASS MORPHISM EFFECT
+   A frosted-glass look used in hero sections and overlays.
+   ============================================================ */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================================
+   RESPONSIVE UTILITIES
+   Hide/show elements at different screen sizes.
+   These complement Tailwind's built-in responsive classes.
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Smaller font sizes on mobile */
+  h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); }
+  h2 { font-size: clamp(1.25rem, 4vw, 1.875rem); }
+}
+
+/* Print styles: Clean layout for printing request details */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .card { box-shadow: none !important; border: 1px solid #ccc !important; }
+}
