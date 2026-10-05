@@ -161,6 +161,20 @@ function App() {
               <Route path="help"           element={<HelpSupport />} />
             </Route>
 
+            {/* ── DIRECT REQUEST DEEP LINKS ────────────────────────
+                These routes support URLs like /request/lost.
+                We still reuse the same NewRequest form component, and
+                NewRequest reads the URL parameter to auto-select type.
+            ─────────────────────────────────────────────────────── */}
+            <Route
+              path="/request/:requestType"
+              element={
+                <ProtectedRoute requiredRole="student">
+                  <NewRequest />
+                </ProtectedRoute>
+              }
+            />
+
 
             {/* ── ADMIN ROUTES ───────────────────────────────
                 These routes require admin role.

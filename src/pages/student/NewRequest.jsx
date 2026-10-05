@@ -19,8 +19,8 @@
 // - Save to database (or demo mode notice)
 // ============================================================
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Icons
 import {
@@ -78,6 +78,7 @@ const TYPE_COLORS = {
 
 function NewRequest() {
   const navigate = useNavigate();
+  const { requestType: requestTypeFromRoute } = useParams();
   const { studentProfile, isDemoMode } = useAuth();
 
   // ── FORM STATE ────────────────────────────────────────────────
@@ -113,6 +114,17 @@ function NewRequest() {
 
   // Form errors
   const [errors, setErrors] = useState({});
+
+  // Deep-link support:
+  // /request/new, /request/lost, /request/damaged, /request/correction
+  // auto-selects the matching request type in step 1 so users don't re-select it.
+  useEffect(() => {
+    const validRequestTypeIds = REQUEST_TYPES.map((type) => type.id);
+    if (requestTypeFromRoute && validRequestTypeIds.includes(requestTypeFromRoute)) {
+      setRequestType(requestTypeFromRoute);
+      setErrors((currentErrors) => ({ ...currentErrors, requestType: "" }));
+    }
+  }, [requestTypeFromRoute]);
 
   // Loading and submission state
   const [submitting, setSubmitting] = useState(false);

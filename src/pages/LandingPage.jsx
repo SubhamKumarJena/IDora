@@ -15,8 +15,8 @@
 
 import React, { useState } from "react";
 
-// React Router hook to navigate programmatically to other pages
-import { useNavigate } from "react-router-dom";
+// Link keeps internal navigation inside React Router without page reload.
+import { Link } from "react-router-dom";
 
 // Icons from Lucide React
 import {
@@ -28,16 +28,15 @@ import {
 
 // Get the current theme and toggle function
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 
 // ============================================================
 // MAIN LANDING PAGE COMPONENT
 // ============================================================
 function LandingPage() {
-  // useNavigate gives us a function to go to other pages programmatically
-  const navigate = useNavigate();
-
   // Get theme state for dark/light mode toggle
   const { isDark, toggleTheme } = useTheme();
+  const { isAuthenticated, userRole } = useAuth();
 
   // Track whether the mobile navigation menu is open or closed
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -160,6 +159,14 @@ function LandingPage() {
     setOpenFaq((current) => (current === index ? null : index));
   }
 
+  // Route used by "Track Your Request" CTAs:
+  // - Logged-in students go straight to tracking
+  // - Logged-in admins go to admin dashboard
+  // - Logged-out users go to login
+  const trackRequestPath = isAuthenticated
+    ? (userRole === "admin" ? "/admin" : "/dashboard/track")
+    : "/login";
+
   // ============================================================
   // RENDER THE LANDING PAGE
   // ============================================================
@@ -172,7 +179,7 @@ function LandingPage() {
           <div className="flex items-center justify-between h-16">
 
             {/* Logo / Brand Name */}
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center">
                 <IdCard className="w-5 h-5 text-white" />
               </div>
@@ -181,13 +188,13 @@ function LandingPage() {
                 <span className="text-xl font-bold text-[var(--text-primary)]">ora</span>
                 <div className="text-[10px] text-[var(--text-muted)] leading-none">Smart Campus Portal</div>
               </div>
-            </div>
+            </Link>
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#services"  className="text-sm text-[var(--text-secondary)] hover:text-blue-600 transition-colors">Services</a>
-              <a href="#how-it-works" className="text-sm text-[var(--text-secondary)] hover:text-blue-600 transition-colors">How It Works</a>
-              <a href="#faq"       className="text-sm text-[var(--text-secondary)] hover:text-blue-600 transition-colors">FAQ</a>
+              <Link to="/#services" className="text-sm text-[var(--text-secondary)] hover:text-blue-600 transition-colors">Services</Link>
+              <Link to="/#how-it-works" className="text-sm text-[var(--text-secondary)] hover:text-blue-600 transition-colors">How It Works</Link>
+              <Link to="/#faq" className="text-sm text-[var(--text-secondary)] hover:text-blue-600 transition-colors">FAQ</Link>
             </div>
 
             {/* Desktop Action Buttons + Theme Toggle */}
@@ -202,20 +209,20 @@ function LandingPage() {
               </button>
 
               {/* Login button */}
-              <button
-                onClick={() => navigate("/login")}
+              <Link
+                to="/login"
                 className="text-sm font-medium text-[var(--text-primary)] hover:text-blue-600 transition-colors px-3 py-2"
               >
                 Login
-              </button>
+              </Link>
 
               {/* Get Started button */}
-              <button
-                onClick={() => navigate("/register")}
+              <Link
+                to="/register"
                 className="btn-primary text-sm"
               >
                 Get Started
-              </button>
+              </Link>
             </div>
 
             {/* Mobile: Theme toggle + Hamburger menu button */}
@@ -237,12 +244,12 @@ function LandingPage() {
         {/* Mobile Navigation Menu (shows when hamburger is clicked) */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-4 space-y-2 animate-fadeIn">
-            <a href="#services"    className="block py-2 text-sm text-[var(--text-secondary)] hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>Services</a>
-            <a href="#how-it-works" className="block py-2 text-sm text-[var(--text-secondary)] hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
-            <a href="#faq"         className="block py-2 text-sm text-[var(--text-secondary)] hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
+            <Link to="/#services" className="block py-2 text-sm text-[var(--text-secondary)] hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>Services</Link>
+            <Link to="/#how-it-works" className="block py-2 text-sm text-[var(--text-secondary)] hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>How It Works</Link>
+            <Link to="/#faq" className="block py-2 text-sm text-[var(--text-secondary)] hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
             <div className="pt-2 flex flex-col gap-2">
-              <button onClick={() => navigate("/login")}    className="w-full text-center px-4 py-2.5 border border-[var(--border-color)] rounded-lg text-sm font-medium">Login</button>
-              <button onClick={() => navigate("/register")} className="btn-primary w-full text-center">Get Started</button>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full text-center px-4 py-2.5 border border-[var(--border-color)] rounded-lg text-sm font-medium">Login</Link>
+              <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="btn-primary w-full text-center">Get Started</Link>
             </div>
           </div>
         )}
@@ -282,22 +289,22 @@ function LandingPage() {
               {/* Call-to-Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Primary CTA: Get Started */}
-                <button
-                  onClick={() => navigate("/register")}
+                <Link
+                  to="/register"
                   className="flex items-center justify-center gap-2 bg-white text-blue-700 font-bold px-8 py-3.5 rounded-xl hover:bg-blue-50 transition-all hover:shadow-lg hover:-translate-y-0.5 text-sm"
                 >
                   Get Started Free
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </Link>
 
                 {/* Secondary CTA: Track Request */}
-                <button
-                  onClick={() => navigate("/login")}
+                <Link
+                  to={trackRequestPath}
                   className="flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-medium px-8 py-3.5 rounded-xl hover:bg-white/20 transition-all text-sm"
                 >
                   <Search className="w-4 h-4" />
                   Track Your Request
-                </button>
+                </Link>
               </div>
 
               {/* Trust indicators */}
@@ -394,7 +401,13 @@ function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Map through services array and create a card for each */}
             {services.map((service) => (
-              <div key={service.id} className="card p-6 hover:shadow-lg transition-all group cursor-pointer" onClick={() => navigate("/register")}>
+              <Link
+                key={service.id}
+                // Each service card deep-links to the request form with type preselected.
+                to={`/request/${service.id}`}
+                className="card p-6 hover:shadow-lg transition-all group cursor-pointer block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label={`${service.title} - open request form`}
+              >
                 {/* Service icon with colored background */}
                 <div className={`w-14 h-14 rounded-xl ${service.bg} ${service.text} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                   {service.icon}
@@ -405,7 +418,7 @@ function LandingPage() {
                   <span>Apply Now</span>
                   <ArrowRight className="w-3 h-3" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -527,19 +540,19 @@ function LandingPage() {
             Join hundreds of students who manage their ID card requests digitally through IDora.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate("/register")}
+            <Link
+              to="/register"
               className="bg-white text-blue-700 font-bold px-8 py-3.5 rounded-xl hover:bg-blue-50 transition-all text-sm flex items-center justify-center gap-2"
             >
               Create Your Account
               <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate("/login")}
+            </Link>
+            <Link
+              to="/login"
               className="bg-white/10 border border-white/20 text-white font-medium px-8 py-3.5 rounded-xl hover:bg-white/20 transition-all text-sm"
             >
               Already have an account? Login
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -569,10 +582,10 @@ function LandingPage() {
             <div>
               <h4 className="font-semibold text-blue-300 mb-4 text-sm uppercase tracking-wider">Quick Links</h4>
               <ul className="space-y-2 text-sm text-blue-200/70">
-                <li><a href="#services"     className="hover:text-white transition-colors">Services</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
-                <li><a href="#faq"          className="hover:text-white transition-colors">FAQ</a></li>
-                <li><button onClick={() => navigate("/login")} className="hover:text-white transition-colors">Student Login</button></li>
+                <li><Link to="/#services" className="hover:text-white transition-colors">Services</Link></li>
+                <li><Link to="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
+                <li><Link to="/#faq" className="hover:text-white transition-colors">FAQ</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">Student Login</Link></li>
               </ul>
             </div>
 
@@ -580,10 +593,11 @@ function LandingPage() {
             <div>
               <h4 className="font-semibold text-blue-300 mb-4 text-sm uppercase tracking-wider">Services</h4>
               <ul className="space-y-2 text-sm text-blue-200/70">
-                <li>New ID Card</li>
-                <li>Lost ID Replacement</li>
-                <li>Damaged ID Replacement</li>
-                <li>Information Correction</li>
+                {/* Footer service links use deep-link routes so type is preselected in form. */}
+                <li><Link to="/request/new" className="hover:text-white transition-colors">New ID Card</Link></li>
+                <li><Link to="/request/lost" className="hover:text-white transition-colors">Lost ID Replacement</Link></li>
+                <li><Link to="/request/damaged" className="hover:text-white transition-colors">Damaged ID Replacement</Link></li>
+                <li><Link to="/request/correction" className="hover:text-white transition-colors">Information Correction</Link></li>
               </ul>
             </div>
 
@@ -593,15 +607,28 @@ function LandingPage() {
               <ul className="space-y-3 text-sm text-blue-200/70">
                 <li className="flex items-center gap-2">
                   <Mail className="w-4 h-4 flex-shrink-0 text-blue-400" />
-                  <span>admin@college.edu</span>
+                  <a href="mailto:admin@college.edu" className="hover:text-white transition-colors">
+                    admin@college.edu
+                  </a>
                 </li>
                 <li className="flex items-center gap-2">
                   <Phone className="w-4 h-4 flex-shrink-0 text-blue-400" />
-                  <span>+91 98765 43210</span>
+                  <a href="tel:+919876543210" className="hover:text-white transition-colors">
+                    +91 98765 43210
+                  </a>
                 </li>
                 <li className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 flex-shrink-0 text-blue-400 mt-0.5" />
-                  <span>Administrative Office, Block A, College Campus</span>
+                  {/* External map link opens in a new tab and keeps the same displayed address text. */}
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Administrative%20Office%2C%20Block%20A%2C%20College%20Campus"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors"
+                    aria-label="Open Administrative Office, Block A, College Campus in maps"
+                  >
+                    Administrative Office, Block A, College Campus
+                  </a>
                 </li>
               </ul>
             </div>
