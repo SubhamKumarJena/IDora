@@ -24,6 +24,7 @@
 
 // Import the createClient function from the Supabase JavaScript library.
 import { createClient } from "@supabase/supabase-js";
+import { checkRegistrationAvailability } from "./registrationAvailability";
 
 // ============================================================
 // SUPABASE CONFIGURATION
@@ -229,9 +230,5 @@ export async function fetchUserRole(userId) {
 export async function isRegistrationNumberAvailable(registrationNumber) {
   if (!supabase) return { available: true, error: null };
 
-  const { data, error } = await supabase.rpc("is_registration_number_available", {
-    candidate_registration_number: registrationNumber,
-  });
-
-  return { available: data === true, error };
+  return checkRegistrationAvailability(supabase, registrationNumber);
 }
