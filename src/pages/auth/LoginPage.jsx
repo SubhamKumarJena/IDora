@@ -33,7 +33,7 @@ import toast from "react-hot-toast";
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isDemoMode, resendVerificationEmail } = useAuth();
+  const { login, isDemoMode, configError, resendVerificationEmail } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   // ── FORM STATE ────────────────────────────────────────────────
@@ -72,6 +72,11 @@ function LoginPage() {
   async function handleSubmit(e) {
     // Prevent the default form submission behavior (which would reload the page)
     e.preventDefault();
+
+    if (configError) {
+      setError(configError);
+      return;
+    }
 
     // Basic validation: make sure both fields are filled
     if (!formData.email.trim() || !formData.password.trim()) {
@@ -193,6 +198,12 @@ function LoginPage() {
               </div>
             )}
 
+            {configError && (
+              <div role="alert" className="p-3 rounded-lg border border-red-300 bg-red-50 text-red-900 text-sm mb-4">
+                Login unavailable: {configError}
+              </div>
+            )}
+
             {/* ── LOGIN FORM ────────────────────────────────── */}
             <form onSubmit={handleSubmit} className="space-y-5">
 
@@ -285,7 +296,7 @@ function LoginPage() {
               {/* Submit button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || Boolean(configError)}
                 className="btn-primary w-full py-3 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {/* Show "Signing in..." when loading */}

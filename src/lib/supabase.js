@@ -25,6 +25,7 @@
 // Import the createClient function from the Supabase JavaScript library.
 import { createClient } from "@supabase/supabase-js";
 import { checkRegistrationAvailability } from "./registrationAvailability";
+import { resolveRuntimeConfig } from "./runtimeConfig";
 
 // ============================================================
 // SUPABASE CONFIGURATION
@@ -37,41 +38,23 @@ import { checkRegistrationAvailability } from "./registrationAvailability";
 // 3. See .env.example for the exact variable names to use.
 // ============================================================
 
-// Read the Supabase project URL from environment variables.
-// This URL is unique to your Supabase project.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+export const runtimeConfig = resolveRuntimeConfig(import.meta.env);
+export const isDemoModeEnabled = runtimeConfig.mode === "demo";
+export const isSupabaseConfigured = runtimeConfig.mode === "real";
 
-// Read the Supabase anonymous (public) API key from environment variables.
-// This key identifies our project and respects RLS security rules.
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Check if Supabase credentials are available.
-// If not, the app will run in "Demo Mode" using sample data.
-export const isSupabaseConfigured =
-  supabaseUrl &&
-  supabaseAnonKey &&
-  supabaseUrl !== "your_supabase_url_here" &&
-  supabaseAnonKey !== "your_supabase_anon_key_here";
-
-// Create the Supabase client only if credentials are available.
-// We export this client so every part of our app can use it.
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        // Persist the user session in the browser's localStorage.
-        // This keeps the user logged in even after they close the browser.
-        persistSession: true,
-
-        // Automatically refresh the authentication token before it expires.
-        // Auth tokens expire for security, so this keeps the user logged in.
-        autoRefreshToken: true,
-
-        // Detect the session from the URL when the user is redirected
-        // back after email verification.
-        detectSessionInUrl: true,
-      },
-    })
-  : null; // If no credentials, set to null (Demo Mode)
+  ? createClient(
+      import.meta.env.VITE_SUPABASE_URL.trim(),
+      import.meta.env.VITE_SUPABASE_ANON_KEY.trim(),
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      }
+    )
+  : null;
 
 // ============================================================
 // HELPER FUNCTIONS FOR SUPABASE OPERATIONS
@@ -212,7 +195,7 @@ export async function uploadFile(file, bucket, path) {
  * @returns {string} Either "student" or "admin".
  */
 export async function fetchUserRole(userId) {
-  if (!supabase) return { role: "student", error: null };
+  if (!supabase) return { role: null, error: { message: "Supabase is not configured." } };
 
   const { data, error } = await supabase
     .from("profiles")
@@ -228,7 +211,7 @@ export async function fetchUserRole(userId) {
  * The database function performs this check safely for unauthenticated signups.
  */
 export async function isRegistrationNumberAvailable(registrationNumber) {
-  if (!supabase) return { available: true, error: null };
+  if (!supabase) return { available: false, error: { code: "SUPABASE_NOT_CONFIGURED", message: "Supabase is not configured." } };
 
   return checkRegistrationAvailability(supabase, registrationNumber);
 }
