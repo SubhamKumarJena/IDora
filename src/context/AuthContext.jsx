@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase, runtimeConfig } from "../lib/supabase";
 import { signupStudent, signinStudentOrAdmin } from "../lib/authOperations";
+import { authenticateDemoUser, rejectDemoRegistration } from "../lib/demoAuth";
 import { DEMO_USERS, DEMO_STUDENT_PROFILE } from "../lib/demoData";
 
 const AuthContext = createContext(null);
@@ -96,16 +97,14 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     if (configError) return { success: false, error: configError };
     if (demoMode) {
-      const match = Object.values(DEMO_USERS).find(
-        (entry) => entry.email === email.trim().toLowerCase() && entry.password === password
-      );
-      if (!match) return { success: false, error: "Invalid demo credentials. Demo accounts are not real student accounts." };
-      const demoUser = { id: match.id, email: match.email, role: match.role };
+      const demoLogin = authenticateDemoUser(DEMO_USERS, email, password);
+      if (!demoLogin.success) return demoLogin;
+      const demoUser = demoLogin.user;
       localStorage.setItem("idora_demo_user", JSON.stringify(demoUser));
       setUser(demoUser);
-      setUserRole(match.role);
-      setStudentProfile(match.role === "student" ? DEMO_STUDENT_PROFILE : null);
-      return { success: true, role: match.role };
+      setUserRole(demoUser.role);
+      setStudentProfile(demoUser.role === "student" ? DEMO_STUDENT_PROFILE : null);
+      return { success: true, role: demoUser.role };
     }
     const result = await signinStudentOrAdmin(supabase, email, password);
     if (result.success) {
@@ -119,7 +118,7 @@ export function AuthProvider({ children }) {
   async function register(formData) {
     if (configError) return { success: false, error: configError };
     if (demoMode) {
-      return { success: false, error: "Demo mode cannot create accounts. Sign in with a clearly labeled demo account, or use a configured Supabase deployment to register." };
+      return rejectDemoRegistration();
     }
     return signupStudent(supabase, formData, `${window.location.origin}/login`);
   }
