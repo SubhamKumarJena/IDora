@@ -24,7 +24,13 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Import our Supabase client.
-import { supabase, isSupabaseConfigured, fetchStudentProfile, fetchUserRole } from "../lib/supabase";
+import {
+  supabase,
+  isSupabaseConfigured,
+  fetchStudentProfile,
+  fetchUserRole,
+  isRegistrationNumberAvailable,
+} from "../lib/supabase";
 
 // Import demo data for when Supabase is not configured.
 import { DEMO_USERS, DEMO_STUDENT_PROFILE } from "../lib/demoData";
@@ -49,7 +55,7 @@ export function AuthProvider({ children }) {
   // Store the currently logged-in user's auth data (from Supabase or Demo).
   const [user, setUser] = useState(null);
 
-  // Store the student's profile (from the "students" table in the database).
+  // Store the student's profile from the profiles table.
   const [studentProfile, setStudentProfile] = useState(null);
 
   // Store the user's role: either "student" or "admin".
@@ -137,7 +143,7 @@ export function AuthProvider({ children }) {
     // Set the basic auth user data
     setUser(authUser);
 
-    // Fetch the user's role (student or admin) from the "profiles" table
+    // Fetch the role from the database, never from editable frontend data.
     const { role } = await fetchUserRole(authUser.id);
     setUserRole(role);
 
@@ -145,6 +151,8 @@ export function AuthProvider({ children }) {
     if (role === "student") {
       const { data: profile } = await fetchStudentProfile(authUser.id);
       setStudentProfile(profile);
+    } else {
+      setStudentProfile(null);
     }
   }
 
@@ -166,11 +174,30 @@ export function AuthProvider({ children }) {
 
       if (error) {
         // Return error message to show to the user
-        return { success: false, error: error.message };
+        return {
+          success: false,
+          error: error.code === "email_not_confirmed"
+            ? "Please verify your email before logging in."
+            : error.message,
+          needsEmailVerification: error.code === "email_not_confirmed",
+        };
       }
 
       // Determine role after login
-      const { role } = await fetchUserRole(data.user.id);
+      const { role, error: roleError } = await fetchUserRole(data.user.id);
+      if (roleError || !role) {
+        await supabase.auth.signOut();
+        return { success: false, error: "Your account profile is missing. Please contact campus support." };
+      }
+
+      if (role === "student") {
+        const { data: profile, error: profileError } = await fetchStudentProfile(data.user.id);
+        if (profileError || !profile) {
+          await supabase.auth.signOut();
+          return { success: false, error: "Your student profile is missing. Please contact campus support." };
+        }
+      }
+
       return { success: true, error: null, role };
     } else {
       // ── DEMO LOGIN ─────────────────────────────────────────
@@ -209,6 +236,21 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function resendVerificationEmail(email) {
+    if (!supabase || !email?.trim()) {
+      return { success: false, error: "Enter your email address first." };
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim().toLowerCase(),
+    });
+
+    return error
+      ? { success: false, error: error.message }
+      : { success: true, error: null };
+  }
+
   // ── REGISTER FUNCTION ─────────────────────────────────────────
   /**
    * Registers a new student account.
@@ -218,43 +260,42 @@ export function AuthProvider({ children }) {
    */
   async function register(formData) {
     if (isSupabaseConfigured && supabase) {
-      // ── SUPABASE REGISTRATION ──────────────────────────────
-      // Step 1: Create the auth account (email + password)
+      // Check the unique registration number before creating an auth account.
+      // The database function returns only availability, not another student's data.
+      const { available, error: availabilityError } =
+        await isRegistrationNumberAvailable(formData.registrationNumber.trim());
+      if (availabilityError) {
+        return { success: false, error: "Could not validate the registration number. Please try again." };
+      }
+      if (!available) {
+        return { success: false, error: "That registration number is already registered." };
+      }
+
+      // Supabase Auth stores and hashes the password. The profile trigger below
+      // copies the non-sensitive registration fields into public.profiles.
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
-          // Pass the full name as metadata so we can use it immediately
-          data: { full_name: formData.fullName },
+          data: {
+            full_name: formData.fullName.trim(),
+            registration_number: formData.registrationNumber.trim(),
+            department: formData.department,
+            semester: Number(formData.semester),
+            phone: formData.phone.trim(),
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       });
 
       if (authError) return { success: false, error: authError.message };
+      if (!authData.user) return { success: false, error: "Account creation did not return a user." };
 
-      // Step 2: Create the student profile in our "students" table
-      const { error: profileError } = await supabase.from("students").insert([
-        {
-          auth_user_id: authData.user.id,
-          full_name: formData.fullName,
-          registration_number: formData.registrationNumber,
-          email: formData.email,
-          department: formData.department,
-          semester: formData.semester,
-          phone: formData.phone,
-        },
-      ]);
-
-      if (profileError) return { success: false, error: profileError.message };
-
-      // Step 3: Create the role record in "profiles" table
-      await supabase.from("profiles").insert([
-        {
-          user_id: authData.user.id,
-          role: "student",
-        },
-      ]);
-
-      return { success: true, error: null };
+      return {
+        success: true,
+        error: null,
+        needsEmailVerification: !authData.session,
+      };
     } else {
       // ── DEMO REGISTRATION ──────────────────────────────────
       // In Demo Mode, we can't save to a real database.
@@ -293,8 +334,22 @@ export function AuthProvider({ children }) {
    *
    * @param {Object} updatedProfile - The new profile data.
    */
-  function updateProfile(updatedProfile) {
-    setStudentProfile(updatedProfile);
+  async function updateProfile(updatedProfile) {
+    if (isDemoMode || !supabase || !user?.id) {
+      setStudentProfile((prev) => ({ ...prev, ...updatedProfile }));
+      return { success: true, error: null };
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(updatedProfile)
+      .eq("id", user.id)
+      .select()
+      .single();
+
+    if (error) return { success: false, error: error.message };
+    setStudentProfile(data);
+    return { success: true, error: null };
   }
 
   // ── CONTEXT VALUE ─────────────────────────────────────────────
@@ -311,6 +366,7 @@ export function AuthProvider({ children }) {
     logout,             // Function to log out
     signOut: logout,    // Alias for logout
     register,           // Function to register
+    resendVerificationEmail,
     updateProfile,      // Function to update profile in state
   };
 

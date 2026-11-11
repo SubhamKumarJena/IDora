@@ -23,6 +23,7 @@ import {
 
 // Context & Data
 import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../lib/supabase";
 import { DEPARTMENTS, SEMESTERS } from "../../lib/demoData";
 import toast from "react-hot-toast";
 
@@ -94,9 +95,16 @@ function StudentProfile() {
 
     setPasswordUpdating(true);
 
-    // Simulate password update
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success("Password updated successfully!");
+    if (!isDemoMode && supabase) {
+      const { error } = await supabase.auth.updateUser({ password: passwordData.newPassword });
+      if (error) {
+        toast.error(error.message);
+        setPasswordUpdating(false);
+        return;
+      }
+    }
+
+    toast.success(isDemoMode ? "Password updated in demo mode." : "Password updated successfully!");
     setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setPasswordUpdating(false);
   }
