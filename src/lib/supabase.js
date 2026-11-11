@@ -80,7 +80,7 @@ export const supabase = isSupabaseConfigured
 /**
  * Fetches the current logged-in user's profile from the database.
  * We store extra student info (department, semester, etc.) in a
- * separate "students" table linked to the auth user.
+ * profiles is linked directly to auth.users through profiles.id.
  *
  * @param {string} userId - The unique ID of the logged-in user.
  * @returns {Object} The student's profile data.
@@ -89,12 +89,11 @@ export async function fetchStudentProfile(userId) {
   // If not configured, return null (Demo Mode will handle this)
   if (!supabase) return { data: null, error: null };
 
-  // Query the "students" table, filtering rows where auth_user_id equals userId.
-  // .single() means we expect exactly one row to be returned.
+  // The profile UUID is the same UUID as the authenticated user.
   const { data, error } = await supabase
-    .from("students")
+    .from("profiles")
     .select("*")
-    .eq("auth_user_id", userId)
+    .eq("id", userId)
     .single();
 
   return { data, error };
@@ -109,9 +108,8 @@ export async function fetchStudentProfile(userId) {
 export async function fetchStudentRequests(studentId) {
   if (!supabase) return { data: null, error: null };
 
-  // Query the "requests" table and sort by newest first.
   const { data, error } = await supabase
-    .from("requests")
+    .from("id_requests")
     .select("*")
     .eq("student_id", studentId)
     .order("submitted_at", { ascending: false }); // Newest first
@@ -128,15 +126,9 @@ export async function fetchStudentRequests(studentId) {
 export async function fetchAllRequests() {
   if (!supabase) return { data: null, error: null };
 
-  // Join the requests table with students table to get student details.
-  // "students(full_name, registration_number, department, email)" means
-  // fetch these specific fields from the related students table.
   const { data, error } = await supabase
-    .from("requests")
-    .select(`
-      *,
-      students(full_name, registration_number, department, email, phone)
-    `)
+    .from("id_requests")
+    .select("*")
     .order("submitted_at", { ascending: false });
 
   return { data, error };
@@ -152,7 +144,7 @@ export async function submitRequest(requestData) {
   if (!supabase) return { data: null, error: { message: "Demo Mode: Cannot save to database." } };
 
   const { data, error } = await supabase
-    .from("requests")
+    .from("id_requests")
     .insert([requestData]) // Insert one new row
     .select() // Return the inserted row
     .single(); // We expect one row back
@@ -172,7 +164,7 @@ export async function updateRequestStatus(requestId, newStatus, remarks) {
   if (!supabase) return { data: null, error: { message: "Demo Mode: Cannot update database." } };
 
   const { data, error } = await supabase
-    .from("requests")
+    .from("id_requests")
     .update({
       status: newStatus,
       admin_remarks: remarks,
@@ -182,7 +174,7 @@ export async function updateRequestStatus(requestId, newStatus, remarks) {
     .select()
     .single();
 
-  return { data, error };
+  return { data, error, success: !error };
 }
 
 /**
@@ -224,8 +216,22 @@ export async function fetchUserRole(userId) {
   const { data, error } = await supabase
     .from("profiles")
     .select("role")
-    .eq("user_id", userId)
+    .eq("id", userId)
     .single();
 
-  return { role: data?.role || "student", error };
+  return { role: data?.role || null, error };
+}
+
+/**
+ * Checks registration-number availability without exposing profile rows.
+ * The database function performs this check safely for unauthenticated signups.
+ */
+export async function isRegistrationNumberAvailable(registrationNumber) {
+  if (!supabase) return { available: true, error: null };
+
+  const { data, error } = await supabase.rpc("is_registration_number_available", {
+    candidate_registration_number: registrationNumber,
+  });
+
+  return { available: data === true, error };
 }

@@ -33,7 +33,7 @@ import toast from "react-hot-toast";
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isDemoMode } = useAuth();
+  const { login, isDemoMode, resendVerificationEmail } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   // ── FORM STATE ────────────────────────────────────────────────
@@ -48,6 +48,7 @@ function LoginPage() {
 
   // Store any error message to display to the user
   const [error, setError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   // Track whether login is in progress (to disable the button)
   const [loading, setLoading] = useState(false);
@@ -63,6 +64,7 @@ function LoginPage() {
 
     // Clear the error message when user starts typing again
     setError("");
+    setNeedsVerification(false);
   }
 
   // ── HANDLE FORM SUBMISSION ────────────────────────────────────
@@ -100,6 +102,7 @@ function LoginPage() {
     } else {
       // Login failed - show the error message
       setError(result.error || "Login failed. Please try again.");
+      setNeedsVerification(Boolean(result.needsEmailVerification));
     }
 
     setLoading(false);
@@ -260,6 +263,23 @@ function LoginPage() {
                   <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
+              )}
+
+              {needsVerification && (
+                <button
+                  type="button"
+                  className="text-sm text-blue-600 hover:underline"
+                  onClick={async () => {
+                    const result = await resendVerificationEmail(formData.email);
+                    if (result.success) {
+                      toast.success("Verification email sent. Please check your inbox.");
+                    } else {
+                      setError(result.error);
+                    }
+                  }}
+                >
+                  Resend verification email
+                </button>
               )}
 
               {/* Submit button */}

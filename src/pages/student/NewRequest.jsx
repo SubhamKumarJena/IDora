@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
-import { supabase, isSupabaseConfigured } from "../../lib/supabase";
+import { submitRequest, isSupabaseConfigured } from "../../lib/supabase";
 import {
   DEPARTMENTS, SEMESTERS, generateRequestNumber,
   REQUEST_TYPE_LABELS
@@ -228,14 +228,17 @@ function NewRequest() {
     } else {
       // ── REAL MODE: Save to Supabase ─────────────────────────
       try {
-        // Get the current auth user
-        const { data: { user } } = await supabase.auth.getUser();
-
-        // Build the request object to insert
+        // Build a snapshot so an admin can review what the student submitted,
+        // while RLS still links the row to the student's profile UUID.
         const requestData = {
-          request_number: reqNumber,
+          // Let PostgreSQL's sequence-backed trigger assign the real number.
+          request_number: null,
           student_id: studentProfile.id,
           request_type: requestType,
+          student_name: studentInfo.fullName,
+          registration_number: studentInfo.registrationNumber,
+          department: studentInfo.department,
+          semester: Number(studentInfo.semester),
           description: requestDetails.description,
           correction_field: requestDetails.correctionField || null,
           existing_information: requestDetails.existingInformation || null,
@@ -245,12 +248,11 @@ function NewRequest() {
           updated_at: new Date().toISOString(),
         };
 
-        // Insert the request into the database
-        const { error } = await supabase.from("requests").insert([requestData]);
+        const { data, error } = await submitRequest(requestData);
 
         if (error) throw error;
 
-        setRequestNumber(reqNumber);
+        setRequestNumber(data?.request_number || reqNumber);
         setSubmitted(true);
         toast.success("Your request has been submitted successfully!");
       } catch (err) {

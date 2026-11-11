@@ -77,6 +77,7 @@ function RegisterPage() {
 
   // Success state (shown after successful registration)
   const [success, setSuccess] = useState(false);
+  const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
 
   // ── HANDLE INPUT CHANGE ───────────────────────────────────────
   function handleChange(e) {
@@ -102,9 +103,12 @@ function RegisterPage() {
       newErrors.fullName = "Name must be at least 2 characters.";
     }
 
-    // Check registration number: not empty, basic format
+    // Registration numbers are kept deliberately flexible for different colleges,
+    // but must contain only letters, numbers, /, or -.
     if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = "Registration number is required.";
+    } else if (!/^[A-Za-z0-9/-]{3,50}$/.test(formData.registrationNumber.trim())) {
+      newErrors.registrationNumber = "Use 3-50 letters, numbers, /, or -.";
     }
 
     // Check email: not empty, valid email format
@@ -171,13 +175,18 @@ function RegisterPage() {
     const result = await register(formData);
 
     if (result.success) {
+      setNeedsEmailVerification(Boolean(result.needsEmailVerification));
       setSuccess(true);
 
       if (result.demoMessage) {
         // Demo mode success message
         toast.success(result.demoMessage, { duration: 6000 });
       } else {
-        toast.success("Account created! Please check your email for verification.");
+        toast.success(
+          result.needsEmailVerification
+            ? "Account created! Please verify your email before logging in."
+            : "Account created successfully!"
+        );
       }
     } else {
       setGeneralError(result.error || "Registration failed. Please try again.");
@@ -198,7 +207,9 @@ function RegisterPage() {
           <p className="text-sm text-[var(--text-secondary)] mb-6">
             {isDemoMode
               ? "Demo mode active. Please login using: student@demo.com / demo123"
-              : "Your account has been created. Please check your email to verify your account, then login."}
+              : needsEmailVerification
+                ? "Account created! Please verify your email before logging in."
+                : "Your account has been created. You can now log in."}
           </p>
           <button onClick={() => navigate("/login")} className="btn-primary w-full">
             Go to Login
