@@ -229,9 +229,23 @@ export async function fetchUserRole(userId) {
 export async function isRegistrationNumberAvailable(registrationNumber) {
   if (!supabase) return { available: true, error: null };
 
-  const { data, error } = await supabase.rpc("is_registration_number_available", {
-    candidate_registration_number: registrationNumber,
-  });
+  try {
+    // Be explicit about the schema; an alternate API default schema must not
+    // silently change which RPC PostgREST resolves.
+    const { data, error } = await supabase.schema("public").rpc(
+      "is_registration_number_available",
+      { candidate_registration_number: registrationNumber.trim() }
+    );
 
-  return { available: data === true, error };
+    if (error) return { available: false, error };
+    if (typeof data !== "boolean") {
+      return {
+        available: false,
+        error: { code: "INVALID_RPC_RESPONSE", message: "Registration validation returned an unexpected response." },
+      };
+    }
+    return { available: data, error: null };
+  } catch (error) {
+    return { available: false, error };
+  }
 }
