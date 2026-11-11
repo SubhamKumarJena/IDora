@@ -47,7 +47,7 @@ function FormField({ label, name, error, children }) {
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const { register, isDemoMode } = useAuth();
+  const { register, isDemoMode, configError } = useAuth();
 
   // ── FORM STATE ────────────────────────────────────────────────
   const [formData, setFormData] = useState({
@@ -162,6 +162,11 @@ function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    if (configError || isDemoMode) {
+      setGeneralError(configError || "Registration is disabled in explicit demo mode. Demo accounts are only for demonstration.");
+      return;
+    }
+
     // Validate before submitting
     if (!validateForm()) {
       toast.error("Please fix the errors before submitting.");
@@ -178,16 +183,9 @@ function RegisterPage() {
       setNeedsEmailVerification(Boolean(result.needsEmailVerification));
       setSuccess(true);
 
-      if (result.demoMessage) {
-        // Demo mode success message
-        toast.success(result.demoMessage, { duration: 6000 });
-      } else {
-        toast.success(
-          result.needsEmailVerification
-            ? "Account created! Please verify your email before logging in."
-            : "Account created successfully!"
-        );
-      }
+      toast.success(result.needsEmailVerification
+        ? "Check your email for a verification link before logging in."
+        : "Account created successfully!");
     } else {
       setGeneralError(result.error || "Registration failed. Please try again.");
     }
@@ -203,13 +201,11 @@ function RegisterPage() {
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Registration Successful!</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{needsEmailVerification ? "Check Your Email" : "Registration Successful!"}</h2>
           <p className="text-sm text-[var(--text-secondary)] mb-6">
-            {isDemoMode
-              ? "Demo mode active. Please login using: student@demo.com / demo123"
-              : needsEmailVerification
-                ? "Account created! Please verify your email before logging in."
-                : "Your account has been created. You can now log in."}
+            {needsEmailVerification
+              ? "Your signup request was accepted by Supabase. If your email is eligible, a verification link will arrive shortly. Verify it before signing in."
+              : "Your account and student profile were created. You can now sign in."}
           </p>
           <button onClick={() => navigate("/login")} className="btn-primary w-full">
             Go to Login
@@ -255,6 +251,12 @@ function RegisterPage() {
               Register to start managing your ID card requests
             </p>
           </div>
+
+          {(configError || isDemoMode) && (
+            <div role="alert" className="p-3 rounded-lg border border-amber-300 mb-4 text-sm">
+              {configError || "Demo only: registration is disabled. Switch to a Supabase-configured deployment to create a real account."}
+            </div>
+          )}
 
           {/* General Error */}
           {generalError && (
@@ -418,7 +420,7 @@ function RegisterPage() {
             </div>
 
             {/* Submit button */}
-            <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-sm font-semibold disabled:opacity-50">
+            <button type="submit" disabled={loading || Boolean(configError) || isDemoMode} className="btn-primary w-full py-3 text-sm font-semibold disabled:opacity-50">
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
