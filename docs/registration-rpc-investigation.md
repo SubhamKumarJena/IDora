@@ -12,7 +12,7 @@
 - Explicitly target `public` for the RPC call.
 - Fail closed on RPC errors and invalid/non-boolean replies; do not create auth users on failed checks.
 - Give distinguishable, safe API exposure/permission/invalid-response messages without leaking backend exception details.
-- Add Node built-in test runner and five focused error-category tests.
+- Add Node built-in test runner and nine focused RPC contract and error-category tests.
 
 ## Safe checks for the owner (no credentials shared)
 1. In the failing request's browser Network panel, record HTTP status and error `code` (especially `PGRST202`, `PGRST106`), without copying Authorization/apikey headers.
@@ -31,7 +31,7 @@
 
 ## Deployment, test and security status
 - Existing SPA rewrite checked statically; deployed public URL could not be fetched from current environment (no assertion that it is publicly accessible).
-- Local isolated Node tests: 5 passing (error-classification cases).
+- Local isolated Node tests: 9 passing (RPC contract, duplicate/fail-closed behavior and error classification).
 - Full repository clone failed due environment DNS; `npm run build`, `npm run lint`, full app and credentialed integration tests **not run**.
 - No SQL migration applied, DB settings changed, data deleted, secrets accessed, or production deployment performed.
 - A duplicate-number race remains protected by the existing unique `profiles.registration_number` constraint for exact duplicates, but normalized-case duplicates need a database-level unique index if case-insensitive uniqueness is required; that would need a separately reviewed migration.
