@@ -23,6 +23,28 @@ import { useAuth } from "../../context/AuthContext";
 import { DEPARTMENTS, SEMESTERS } from "../../lib/demoData";
 import toast from "react-hot-toast";
 
+// Keep this component outside RegisterPage so React keeps the same component
+// identity when form state changes. That prevents the input from being
+// unmounted and remounted after every keystroke.
+function FormField({ label, name, error, children }) {
+  return (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      {/* children allows either an <input> or <select> element */}
+      {children}
+      {/* Show the current field error without replacing the input element */}
+      {error && (
+        <p className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" />
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function RegisterPage() {
   const navigate = useNavigate();
   const { register, isDemoMode } = useAuth();
@@ -186,26 +208,6 @@ function RegisterPage() {
     );
   }
 
-  // ── HELPER: Render a form field with error display ────────────
-  function FormField({ label, name, type = "text", placeholder, children }) {
-    return (
-      <div>
-        <label htmlFor={name} className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-          {label} <span className="text-red-500">*</span>
-        </label>
-        {/* children allows either an <input> or <select> element */}
-        {children}
-        {/* Show error message below the field if it exists */}
-        {errors[name] && (
-          <p className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            {errors[name]}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   // ============================================================
   // RENDER THE REGISTRATION FORM
   // ============================================================
@@ -261,7 +263,7 @@ function RegisterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {/* Full Name */}
-                <FormField label="Full Name" name="fullName">
+                <FormField label="Full Name" name="fullName" error={errors.fullName}>
                   <input
                     id="fullName"
                     type="text"
@@ -275,7 +277,7 @@ function RegisterPage() {
                 </FormField>
 
                 {/* Registration Number */}
-                <FormField label="Registration Number" name="registrationNumber">
+                <FormField label="Registration Number" name="registrationNumber" error={errors.registrationNumber}>
                   <input
                     id="registrationNumber"
                     type="text"
@@ -288,7 +290,7 @@ function RegisterPage() {
                 </FormField>
 
                 {/* Department */}
-                <FormField label="Department" name="department">
+                <FormField label="Department" name="department" error={errors.department}>
                   <select
                     id="department"
                     name="department"
@@ -304,7 +306,7 @@ function RegisterPage() {
                 </FormField>
 
                 {/* Semester */}
-                <FormField label="Semester" name="semester">
+                <FormField label="Semester" name="semester" error={errors.semester}>
                   <select
                     id="semester"
                     name="semester"
@@ -328,7 +330,7 @@ function RegisterPage() {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* College Email */}
-                <FormField label="College Email" name="email">
+                <FormField label="College Email" name="email" error={errors.email}>
                   <input
                     id="email"
                     type="email"
@@ -342,7 +344,7 @@ function RegisterPage() {
                 </FormField>
 
                 {/* Phone Number */}
-                <FormField label="Phone Number" name="phone">
+                <FormField label="Phone Number" name="phone" error={errors.phone}>
                   <input
                     id="phone"
                     type="tel"
@@ -365,7 +367,7 @@ function RegisterPage() {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Password */}
-                <FormField label="Password" name="password">
+                <FormField label="Password" name="password" error={errors.password}>
                   <div className="relative">
                     <input
                       id="password"
@@ -384,7 +386,7 @@ function RegisterPage() {
                 </FormField>
 
                 {/* Confirm Password */}
-                <FormField label="Confirm Password" name="confirmPassword">
+                <FormField label="Confirm Password" name="confirmPassword" error={errors.confirmPassword}>
                   <div className="relative">
                     <input
                       id="confirmPassword"
