@@ -24,6 +24,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Import our Supabase client.
+import { registrationAvailabilityErrorMessage } from "../lib/registrationErrors";
+
 import {
   supabase,
   isSupabaseConfigured,
@@ -265,7 +267,7 @@ export function AuthProvider({ children }) {
       const { available, error: availabilityError } =
         await isRegistrationNumberAvailable(formData.registrationNumber.trim());
       if (availabilityError) {
-        return { success: false, error: "Could not validate the registration number. Please try again." };
+        return { success: false, error: registrationAvailabilityErrorMessage(availabilityError) };
       }
       if (!available) {
         return { success: false, error: "That registration number is already registered." };
